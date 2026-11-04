@@ -562,12 +562,10 @@
           <input type="file" id="sideFbsFile_sports" accept=".xlsx,.xls,.csv,.zip" style="display:none" onchange="modalAccount='sports';handleFbsFile(event.target.files[0]);event.target.value=''"/>
         </div>
       </div>
-      <div class="side-sep"></div>
       <button class="side-item" onclick="toggleSideMenu(false);openManualEntriesListModal()"><span class="side-ic"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span><span class="side-label">Manuais</span><span class="side-hint">Itens cadastrados manualmente</span></button>
       <button class="side-item" onclick="toggleSideMenu(false);openProductRepoModal()"><span class="side-ic"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span class="side-label">Produtos</span><span class="side-hint">Catálogo + FBS + imagens consolidados</span></button>
       <button class="side-item" onclick="toggleSideMenu(false);openImagesManagerModal()"><span class="side-ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span><span class="side-label">Imagens</span><span class="side-hint">Gerenciar imagens dos produtos</span></button>
       <button class="side-item" onclick="toggleSideMenu(false);openHistoryModal()"><span class="side-ic"><svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg></span><span class="side-label">Histórico</span><span class="side-hint">Quanto foi enviado por conta</span></button>
-      <div class="side-sep"></div>
       <button class="side-item" onclick="toggleSideMenu(false);exportAllData()"><span class="side-ic"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></span><span class="side-label">Backup</span><span class="side-hint">Exportar tudo em JSON</span></button>
       <button class="side-item" onclick="toggleSideMenu(false);document.getElementById('importBackup').click()"><span class="side-ic"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span><span class="side-label">Restaurar</span><span class="side-hint">Importar backup JSON</span></button>
       <div class="side-group" id="sideGroup_ext">
@@ -577,9 +575,8 @@
           <button class="side-sub-item" onclick="toggleSideMenu(false);exportExtensionSnapshot()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Baixar JSON para Importar</button>
         </div>
       </div>
-      <div class="side-sep"></div>
       <button class="side-item" onclick="toggleTheme()"><span class="side-ic" id="themeIcon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span><span class="side-label">Tema</span><span class="side-hint">Alternar claro/escuro</span></button>
-      <div id="sideVersion" style="padding:14px 16px 20px;font-size:10.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);margin-top:8px"></div>
+      <div id="sideVersion" style="padding:14px 16px 20px;font-size:10.5px;color:var(--muted);line-height:1.5"></div>
     </nav>
   </aside>
 
@@ -607,9 +604,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.11';
+const SYSTEM_VERSION = '2026.11.04.12';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.04.12', date: '04/11/2026', changes: [
+    'Menu lateral com espaçamento uniforme entre todos os itens — removidos os separadores entre seções.'
+  ]},
   { version: '2026.11.04.11', date: '04/11/2026', changes: [
     'Toasts empilhados verticalmente no canto inferior direito, com animação de entrada e saída.',
     'Botão de histórico de versões (ⓘ) no cabeçalho ao lado do menu.'
