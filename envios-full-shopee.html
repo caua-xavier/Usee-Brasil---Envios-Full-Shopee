@@ -505,10 +505,6 @@
     </div>
     <div class="row">
       <input type="file" id="importBackup" accept="application/json" style="display:none" onchange="importAllData(event)" />
-      <button id="updateChip" onclick="downloadUpdate()" style="display:none;align-items:center;gap:6px;background:linear-gradient(135deg,#ff9d3b,#ee5b2e);color:#fff;border:none;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(238,91,46,.35)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
-        Atualização disponível <span class="uc-ver" style="opacity:.85"></span>
-      </button>
       <button class="btn ghost" id="menuToggle" onclick="toggleSideMenu()" title="Menu" aria-label="Abrir menu" style="padding:9px 11px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
       </button>
@@ -575,15 +571,6 @@
         </div>
       </div>
       <div class="side-sep"></div>
-      <div class="side-group" id="sideGroup_update">
-        <button class="side-item has-sub" onclick="toggleSideSub('update')"><span class="side-ic" style="color:#4ade80"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span><span class="side-label" style="display:inline-flex;align-items:center;gap:6px">Atualização<span id="updateMenuBadge" style="display:none;background:#ee5b2e;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:999px;letter-spacing:.4px">NOVA</span></span><span class="side-hint">Versão atual: v<span id="localVersionLabel"></span></span><span class="side-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span></button>
-        <div class="side-sub" id="sideSub_update">
-          <button class="side-sub-item" onclick="checkForUpdate({silent:false})"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Verificar atualização</button>
-          <button class="side-sub-item" onclick="vincularArquivoSistema()"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Vincular arquivo local</button>
-          <button class="side-sub-item" onclick="desvincularArquivoSistema()"><svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>Desvincular arquivo</button>
-          <div style="padding:4px 16px 4px 48px;font-size:10.5px;color:var(--muted);line-height:1.4" id="fileHandleStatus">Nenhum arquivo vinculado</div>
-        </div>
-      </div>
       <button class="side-item" onclick="toggleTheme()"><span class="side-ic" id="themeIcon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span><span class="side-label">Tema</span><span class="side-hint">Alternar claro/escuro</span></button>
     </nav>
   </aside>
@@ -609,174 +596,6 @@ const SHOPEE_ACCOUNTS = {
   sports: { id:'sports', label:'Shopee Sports', color:'#ee5b2e', shopId:'1559054473', logo:'data:image/webp;base64,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' }
 };
 const STORE_KEY = 'shopeeFullManager.v1';
-
-/* ---------- Sistema de Atualização (via GitHub público) ---------- */
-// Versão desta cópia do sistema. Incremente toda vez que publicar uma nova no GitHub.
-// Formato sugerido: AAAA.MM.DD.N   (ex: 2026.11.03.1 → segunda publicação do dia 03/11/2026).
-const SYSTEM_VERSION = '2026.11.04.5';
-// URL base do repositório GitHub público onde ficam a versão + o .html atualizado.
-// Substitua USUARIO e REPO pelo seu. Ex: https://raw.githubusercontent.com/useebrasil/gestor-full-shopee/main/
-// A pasta precisa conter DOIS arquivos: `version.txt` (só com a string de versão) e `envios-full-shopee.html`.
-const UPDATE_URL_BASE = 'https://usee-envios-full.vercel.app/';
-let _updateInfo = { remote: null, loading: false, checkedAt: null };
-function _cmpVersion(a, b){
-  const pa = String(a||'').split('.').map(n => parseInt(n,10)||0);
-  const pb = String(b||'').split('.').map(n => parseInt(n,10)||0);
-  for(let i = 0; i < Math.max(pa.length, pb.length); i++){
-    const da = pa[i]||0, db = pb[i]||0;
-    if(da !== db) return da - db;
-  }
-  return 0;
-}
-async function checkForUpdate(opts){
-  opts = opts || {};
-  if(_updateInfo.loading) return;
-  _updateInfo.loading = true;
-  try{
-    const resp = await fetch(UPDATE_URL_BASE + 'version.txt?ts=' + Date.now(), { cache:'no-store' });
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const remote = (await resp.text()).trim();
-    _updateInfo.remote = remote;
-    _updateInfo.checkedAt = new Date().toISOString();
-    const hasUpdate = _cmpVersion(remote, SYSTEM_VERSION) > 0;
-    if(!opts.silent){
-      if(hasUpdate) toast(`Nova versão disponível: v${remote}`,'ok');
-      else toast(`Sistema já está atualizado (v${SYSTEM_VERSION})`,'ok');
-    }
-    _renderUpdateChip();
-    _renderUpdateMenuBadge();
-  }catch(err){
-    if(!opts.silent) toast('Não foi possível verificar atualização: '+err.message,'warn');
-  }finally{
-    _updateInfo.loading = false;
-  }
-}
-/* ---- Atualização in-place via File System Access API ---- */
-const _FH_KEY = 'systemFileHandle';
-async function _loadFileHandle(){
-  try{ return await idbGet(STORE_STATE, _FH_KEY) || null; }catch(e){ return null; }
-}
-async function _saveFileHandle(handle){
-  try{ await idbSet(STORE_STATE, _FH_KEY, handle); }catch(e){}
-}
-async function _ensureWritePermission(handle){
-  if(!handle || !handle.queryPermission) return false;
-  const opts = { mode: 'readwrite' };
-  let state = await handle.queryPermission(opts);
-  if(state === 'granted') return true;
-  state = await handle.requestPermission(opts);
-  return state === 'granted';
-}
-async function _pickSystemFile(){
-  if(!window.showOpenFilePicker){
-    toast('Seu navegador não suporta atualização in-place. Use Chrome ou Edge.','err');
-    return null;
-  }
-  try{
-    const [handle] = await window.showOpenFilePicker({
-      types: [{ description:'Gestor Full Shopee', accept:{ 'text/html': ['.html'] } }],
-      multiple: false,
-      excludeAcceptAllOption: true
-    });
-    if(!/envios-full-shopee/i.test(handle.name)){
-      if(!confirm(`O arquivo escolhido se chama "${handle.name}", diferente do padrão envios-full-shopee.html.\n\nUsar mesmo assim?`)) return null;
-    }
-    await _saveFileHandle(handle);
-    return handle;
-  }catch(err){
-    if(err && err.name === 'AbortError') return null;
-    toast('Erro ao selecionar arquivo: '+err.message,'err');
-    return null;
-  }
-}
-async function vincularArquivoSistema(){
-  const h = await _pickSystemFile();
-  if(h){ toast(`Arquivo vinculado: ${h.name}`,'ok'); _renderFileHandleStatus(); }
-}
-async function desvincularArquivoSistema(){
-  if(!confirm('Remover vínculo com o arquivo local?\n\nVocê precisará escolher o arquivo de novo na próxima atualização.')) return;
-  try{ await idbSet(STORE_STATE, _FH_KEY, null); }catch(e){}
-  toast('Arquivo desvinculado','ok');
-  _renderFileHandleStatus();
-}
-function _renderFileHandleStatus(){
-  (async () => {
-    const el = document.getElementById('fileHandleStatus');
-    if(!el) return;
-    const h = await _loadFileHandle();
-    el.textContent = h ? `Arquivo vinculado: ${h.name}` : 'Nenhum arquivo vinculado';
-  })();
-}
-
-async function downloadUpdate(){
-  if(!_updateInfo.remote){ await checkForUpdate({silent:true}); if(!_updateInfo.remote) return; }
-  if(_cmpVersion(_updateInfo.remote, SYSTEM_VERSION) <= 0){
-    toast('Você já está na versão mais recente.','ok');
-    return;
-  }
-  if(!window.showOpenFilePicker){
-    // Firefox/Safari → fallback para download manual
-    if(!confirm(`Atualizar para v${_updateInfo.remote}?\n\nSeu navegador não permite atualização automática. O arquivo novo será baixado — substitua o antigo manualmente e recarregue.`)) return;
-    try{
-      toggleSideMenu(false);
-      toast('Baixando nova versão...','ok');
-      const resp = await fetch(UPDATE_URL_BASE + 'envios-full-shopee.html?ts=' + Date.now(), { cache:'no-store' });
-      if(!resp.ok) throw new Error('HTTP '+resp.status);
-      const blob = await resp.blob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'envios-full-shopee.html';
-      a.click();
-      URL.revokeObjectURL(a.href);
-      toast(`v${_updateInfo.remote} baixada. Substitua o arquivo e recarregue.`,'ok');
-    }catch(err){ toast('Erro ao baixar atualização: '+err.message,'err'); }
-    return;
-  }
-  // Chrome/Edge → in-place
-  let handle = await _loadFileHandle();
-  if(!handle){
-    if(!confirm(`Atualizar para v${_updateInfo.remote}?\n\nÉ a primeira atualização neste navegador. Vou pedir para você selecionar o próprio envios-full-shopee.html (onde ele está salvo no seu computador). Depois disso, as próximas atualizações são automáticas.`)) return;
-    handle = await _pickSystemFile();
-    if(!handle) return;
-  } else {
-    if(!confirm(`Atualizar para v${_updateInfo.remote}?\n\nO arquivo "${handle.name}" será sobrescrito com a versão nova e a página recarregará.`)) return;
-  }
-  const hasPerm = await _ensureWritePermission(handle);
-  if(!hasPerm){ toast('Permissão de escrita recusada.','err'); return; }
-  try{
-    toggleSideMenu(false);
-    toast('Baixando nova versão...','ok');
-    const resp = await fetch(UPDATE_URL_BASE + 'envios-full-shopee.html?ts=' + Date.now(), { cache:'no-store' });
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const blob = await resp.blob();
-    toast('Gravando arquivo...','ok');
-    const writable = await handle.createWritable();
-    await writable.write(blob);
-    await writable.close();
-    toast(`v${_updateInfo.remote} instalada. Recarregando...`,'ok');
-    setTimeout(() => location.reload(), 700);
-  }catch(err){
-    toast('Erro ao gravar atualização: '+err.message,'err');
-  }
-}
-function _renderUpdateChip(){
-  const chip = document.getElementById('updateChip');
-  if(!chip) return;
-  const hasUpdate = _updateInfo.remote && _cmpVersion(_updateInfo.remote, SYSTEM_VERSION) > 0;
-  if(hasUpdate){
-    chip.style.display = 'inline-flex';
-    chip.title = `Versão instalada: v${SYSTEM_VERSION} · Nova: v${_updateInfo.remote}`;
-    chip.querySelector('.uc-ver').textContent = 'v' + _updateInfo.remote;
-  } else {
-    chip.style.display = 'none';
-  }
-}
-function _renderUpdateMenuBadge(){
-  const badge = document.getElementById('updateMenuBadge');
-  if(!badge) return;
-  const hasUpdate = _updateInfo.remote && _cmpVersion(_updateInfo.remote, SYSTEM_VERSION) > 0;
-  badge.style.display = hasUpdate ? 'inline-flex' : 'none';
-}
 const CATALOG_KEY = 'shopeeFullManager.catalog.v1';   // legacy localStorage key (migrated to IDB)
 const COLMAP_KEY = 'shopeeFullManager.colmap.v1';
 
@@ -6218,13 +6037,6 @@ document.addEventListener('drop', e => {
     }
   }catch(e){}
   render();
-  // Preenche label da versão atual no menu lateral e dispara check de atualização em segundo plano
-  try{
-    const lv = document.getElementById('localVersionLabel');
-    if(lv) lv.textContent = SYSTEM_VERSION;
-    if(UPDATE_URL_BASE && UPDATE_URL_BASE.indexOf('USUARIO') < 0) checkForUpdate({silent:true});
-    _renderFileHandleStatus();
-  }catch(e){}
   try{
     await Promise.all([ loadStateAsync(), loadAllCatalogsAsync(), loadAllFbsAsync(), loadAllProductImagesAsync(), loadAllFbsSupplementsAsync() ]);
     if(typeof enrichAllCatalogs === 'function') enrichAllCatalogs();
