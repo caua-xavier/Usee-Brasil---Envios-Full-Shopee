@@ -607,9 +607,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.18';
+const SYSTEM_VERSION = '2026.11.04.19';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.04.19', date: '04/11/2026', changes: [
+    'Modo "Geral" (padrão) e "Por nota" para vincular Pedidos Hub. No modo Geral, campo único abaixo da área Notas Anexadas vincula todos os pedidos a todas as notas. No modo Por nota, cada card tem seu próprio campo.'
+  ]},
   { version: '2026.11.04.18', date: '04/11/2026', changes: [
     'Cada card de NF em "Notas Anexadas" ganhou um campo "Pedidos Hub vinculados" — dá para adicionar vários códigos de pedido Hub por nota digitando e apertando Enter. Cada código aparece como pill removível.'
   ]},
@@ -2021,6 +2024,29 @@ function removeHubPedidoFromNote(shipmentId, noteId, idx){
   const nf = s.notes.find(n => n.id === noteId); if(!nf) return;
   if(!Array.isArray(nf.hubPedidos)) return;
   nf.hubPedidos.splice(idx, 1);
+  saveState();
+  render();
+}
+function addHubPedidoGeral(shipmentId, code){
+  const s = getShipment(shipmentId); if(!s) return;
+  const c = String(code||'').trim();
+  if(!c) return;
+  if(!Array.isArray(s.hubPedidosGerais)) s.hubPedidosGerais = [];
+  if(s.hubPedidosGerais.includes(c)){ toast('Esse pedido já está vinculado ao envio','warn'); return; }
+  s.hubPedidosGerais.push(c);
+  saveState();
+  render();
+}
+function removeHubPedidoGeral(shipmentId, idx){
+  const s = getShipment(shipmentId); if(!s) return;
+  if(!Array.isArray(s.hubPedidosGerais)) return;
+  s.hubPedidosGerais.splice(idx, 1);
+  saveState();
+  render();
+}
+function setHubPedidosMode(shipmentId, mode){
+  const s = getShipment(shipmentId); if(!s) return;
+  s.hubPedidosMode = mode;
   saveState();
   render();
 }
@@ -5695,7 +5721,14 @@ function renderDetail(id){
 
     ${s.notes.length ? `
       <div class="panel">
-        <h2>Notas Anexadas <span class="count">${s.notes.length}</span></h2>
+        <div class="row" style="justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+          <h2 style="margin:0">Notas Anexadas <span class="count">${s.notes.length}</span></h2>
+          ${(() => {
+            const mode = s.hubPedidosMode || 'geral';
+            const chip = (val, label, title) => `<button onclick="setHubPedidosMode('${s.id}','${val}')" title="${title}" style="background:${mode===val?'var(--accent)':'transparent'};color:${mode===val?'#000':'var(--muted)'};border:1px solid ${mode===val?'var(--accent)':'var(--line)'};border-radius:7px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer">${label}</button>`;
+            return `<div style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-right:4px">Pedidos Hub:</span>${chip('geral','Geral','Um ou poucos pedidos valem para todas as notas')}${chip('individual','Por nota','Cada nota tem seus próprios pedidos vinculados')}</div>`;
+          })()}
+        </div>
         <div class="nf-grid">
           ${s.notes.map(nf => {
             const nfItems = agg.items.filter(it => it.nfId === nf.id);
@@ -5719,6 +5752,7 @@ function renderDetail(id){
                   ${matchedN && unN ? `<span class="pill ok">${matchedN} match</span>` : ''}
                   ${unN ? `<span class="nf-unmatch" title="${unN} item${unN===1?'':'s'} sem correspondência no FBS">${unN} sem match ⚠</span>` : ''}
                 </div>
+                ${(s.hubPedidosMode || 'geral') === 'individual' ? `
                 <div class="nf-hub-pedidos" onclick="event.stopPropagation()" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:4px;align-items:center">
                   <span style="font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;width:100%;margin-bottom:2px">Pedidos Hub vinculados</span>
                   ${(nf.hubPedidos || []).map((code, i) => `
@@ -5729,10 +5763,25 @@ function renderDetail(id){
                   `).join('')}
                   <input type="text" placeholder="+ Pedido" onkeydown="if(event.key==='Enter'){event.preventDefault();addHubPedidoToNote('${s.id}','${nf.id}',this.value);this.value=''}" onclick="event.stopPropagation()" style="background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:2px 8px;font-size:10.5px;width:76px;flex:1;min-width:66px" />
                 </div>
+                ` : ''}
               </div>
             `;
           }).join('')}
         </div>
+        ${(s.hubPedidosMode || 'geral') === 'geral' ? `
+        <div style="margin-top:14px;padding:12px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;margin-bottom:8px">Pedidos Hub vinculados a todas as notas</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+            ${(s.hubPedidosGerais || []).map((code, i) => `
+              <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(241,196,15,.14);color:var(--accent2);border:1px solid rgba(241,196,15,.4);border-radius:999px;padding:3px 6px 3px 10px;font-size:12px;font-weight:600">
+                ${escapeHtml(code)}
+                <button onclick="removeHubPedidoGeral('${s.id}',${i})" title="Remover" style="background:transparent;border:0;color:var(--accent2);cursor:pointer;font-size:14px;line-height:1;padding:0 2px">×</button>
+              </span>
+            `).join('')}
+            <input type="text" placeholder="+ Código do pedido" onkeydown="if(event.key==='Enter'){event.preventDefault();addHubPedidoGeral('${s.id}',this.value);this.value=''}" style="background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:4px 12px;font-size:12px;min-width:150px;flex:1" />
+          </div>
+        </div>
+        ` : ''}
       </div>
     ` : ''}
 
