@@ -32,8 +32,8 @@
     --panel2:#e7e7e7;
     --line:#cfcfcf;
     --line-soft:#dcdcdc;
-    --txt:#333333;
-    --txt-strong:#262727;
+    --txt:#000000;
+    --txt-strong:#000000;
     --muted:#7a7a7a;
     --muted-2:#555555;
     --accent:#004edf;          /* USEE azul marca */
@@ -609,9 +609,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.24';
+const SYSTEM_VERSION = '2026.11.04.25';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.04.25', date: '04/11/2026', changes: [
+    'Tema claro: textos principais (--txt e --txt-strong) agora em preto puro (#000) para contraste máximo.'
+  ]},
   { version: '2026.11.04.24', date: '04/11/2026', changes: [
     'Logo Usee no cabeçalho ampliada (scale 1.35) para ocupar melhor o espaço do quadrado, removendo a sobra preta ao redor.'
   ]},
