@@ -94,6 +94,7 @@
   .brand .mark{width:62px;height:62px;border-radius:8px;background:#fff;display:grid;place-items:center;border:1px solid var(--line);box-shadow:0 0 0 1px var(--line-soft),0 6px 16px rgba(0,78,223,.15);overflow:hidden;transition:transform .2s}
   .brand .mark:hover{transform:translateY(-2px) scale(1.03)}
   .brand .mark > svg,.brand .mark > img{width:100%;height:100%;display:block;object-fit:cover;border-radius:15px}
+  .brand .mark:not(.mark-shopee) > img{transform:scale(1.35);transform-origin:center}
   .brand .mark-shopee{background:#fff;box-shadow:0 0 0 1px var(--line-soft),0 10px 28px rgba(238,77,45,.35)}
   .brand .mark-shopee > img{width:100%;height:100%;display:block;object-fit:contain !important;padding:1px;background:#fff;border-radius:15px;box-sizing:border-box;transform:scale(1.12);transform-origin:center}
   .brand .logos-x{font-size:20px;color:var(--muted);font-weight:300;user-select:none;font-family:'Poppins','Open Sans',sans-serif;opacity:.6}
@@ -608,9 +609,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.23';
+const SYSTEM_VERSION = '2026.11.04.24';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.04.24', date: '04/11/2026', changes: [
+    'Logo Usee no cabeçalho ampliada (scale 1.35) para ocupar melhor o espaço do quadrado, removendo a sobra preta ao redor.'
+  ]},
   { version: '2026.11.04.23', date: '04/11/2026', changes: [
     'Tema claro com tons de cinza um pouco mais escuros em fundos secundários (--panel2, --bg2) e linhas (--line, --line-soft, --soft) para melhorar o contraste.'
   ]},
