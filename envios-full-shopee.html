@@ -478,14 +478,18 @@
     updateThemeIcon();
   }
   function updateThemeIcon(){
-    var icon = document.getElementById('themeIcon');
-    if(!icon) return;
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    // SVG padrão (lua para dark, sol para light)
-    icon.innerHTML = isDark
+    var sideSvg = isDark
       ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
       : '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-    var btn = document.getElementById('themeToggle');
+    var headerSvg = isDark
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    var icon = document.getElementById('themeIcon');
+    if(icon) icon.innerHTML = sideSvg;
+    var header = document.getElementById('themeIconHeader');
+    if(header) header.innerHTML = headerSvg;
+    var btn = document.getElementById('themeToggleHeader');
     if(btn) btn.setAttribute('title', isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro');
   }
   document.addEventListener('DOMContentLoaded', updateThemeIcon);
@@ -514,6 +518,9 @@
       <input type="file" id="importBackup" accept="application/json" style="display:none" onchange="importAllData(event)" />
       <button class="btn ghost" id="changelogBtn" onclick="openChangelogModal()" title="Histórico de versões" aria-label="Histórico de versões" style="padding:9px 11px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </button>
+      <button class="btn ghost" id="themeToggleHeader" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema" style="padding:9px 11px">
+        <span id="themeIconHeader" style="display:inline-flex"></span>
       </button>
       <button class="btn ghost" id="menuToggle" onclick="toggleSideMenu()" title="Menu" aria-label="Abrir menu" style="padding:9px 11px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
@@ -609,9 +616,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.26';
+const SYSTEM_VERSION = '2026.11.04.27';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.04.27', date: '04/11/2026', changes: [
+    'Botão de alternar tema (lua/sol) no cabeçalho, entre o ⓘ (histórico) e o ☰ (menu). Continua disponível também no menu lateral.'
+  ]},
   { version: '2026.11.04.26', date: '04/11/2026', changes: [
     'Tema claro ganhou o mesmo gradiente de fundo do tema escuro: dois radial-gradients suaves nos cantos (azul Usee e amarelo Shopee) sobre fundo branco.'
   ]},
