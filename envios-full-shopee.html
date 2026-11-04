@@ -575,7 +575,7 @@
         </div>
       </div>
       <div class="side-sep"></div>
-      <button class="side-item" onclick="checkForUpdate({silent:false})"><span class="side-ic"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span><span class="side-label" style="display:inline-flex;align-items:center;gap:6px">Verificar atualização<span id="updateMenuBadge" style="display:none;background:#ee5b2e;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:999px;letter-spacing:.4px">NOVA</span></span><span class="side-hint">Versão atual: v<span id="localVersionLabel"></span></span></button>
+      <button class="side-item" onclick="checkForUpdate({silent:false})"><span class="side-ic" style="color:#4ade80"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span><span class="side-label" style="display:inline-flex;align-items:center;gap:6px">Verificar atualização<span id="updateMenuBadge" style="display:none;background:#ee5b2e;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:999px;letter-spacing:.4px">NOVA</span></span><span class="side-hint">Versão atual: v<span id="localVersionLabel"></span></span></button>
       <button class="side-item" onclick="toggleTheme()"><span class="side-ic" id="themeIcon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span><span class="side-label">Tema</span><span class="side-hint">Alternar claro/escuro</span></button>
     </nav>
   </aside>
@@ -605,11 +605,11 @@ const STORE_KEY = 'shopeeFullManager.v1';
 /* ---------- Sistema de Atualização (via GitHub público) ---------- */
 // Versão desta cópia do sistema. Incremente toda vez que publicar uma nova no GitHub.
 // Formato sugerido: AAAA.MM.DD.N   (ex: 2026.11.03.1 → segunda publicação do dia 03/11/2026).
-const SYSTEM_VERSION = '2026.11.03.1';
+const SYSTEM_VERSION = '2026.11.04.1';
 // URL base do repositório GitHub público onde ficam a versão + o .html atualizado.
 // Substitua USUARIO e REPO pelo seu. Ex: https://raw.githubusercontent.com/useebrasil/gestor-full-shopee/main/
 // A pasta precisa conter DOIS arquivos: `version.txt` (só com a string de versão) e `envios-full-shopee.html`.
-const UPDATE_URL_BASE = 'https://raw.githubusercontent.com/caua-xavier/Usee-Brasil---Envios-Full-Shopee/main/';
+const UPDATE_URL_BASE = 'https://usee-envios-full.vercel.app/';
 let _updateInfo = { remote: null, loading: false, checkedAt: null };
 function _cmpVersion(a, b){
   const pa = String(a||'').split('.').map(n => parseInt(n,10)||0);
