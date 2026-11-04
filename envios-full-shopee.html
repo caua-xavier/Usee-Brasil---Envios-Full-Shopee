@@ -302,19 +302,19 @@
 
   /* Notas grid + tiles */
   .nf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
-  .nf-tile{aspect-ratio:1;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+  .nf-tile{min-height:220px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
   .nf-tile:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,78,223,.1)}
   .nf-tile .nf-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
   .nf-tile .nf-num{font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1;margin:10px 0 4px;word-break:break-all}
   .nf-tile .nf-meta{font-size:11px;color:var(--muted)}
   .nf-tile .nf-emit{font-size:11.5px;color:var(--txt-strong);font-weight:600;margin-top:4px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-clamp:2;line-height:1.25}
   .nf-tile .nf-stats{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto}
-  .nf-tile .nf-remove{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);border:0;color:#fff;width:26px;height:26px;border-radius:6px;cursor:pointer;display:grid;place-items:center;font-size:16px;line-height:1;transition:all .15s;opacity:0;z-index:2}
+  .nf-tile .nf-remove{position:absolute;top:14px;right:44px;background:transparent;border:1.5px solid var(--line);color:var(--muted);width:22px;height:22px;border-radius:6px;cursor:pointer;display:grid;place-items:center;font-size:14px;line-height:1;transition:all .15s;opacity:0;z-index:2}
   .nf-tile .nf-stats{align-items:center;flex-wrap:nowrap;min-width:0;gap:4px}
   .nf-tile .nf-stats .pill{white-space:nowrap;flex-shrink:0;font-size:10px;padding:2px 7px}
   .nf-tile .nf-unmatch{margin-left:auto;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;border:1px solid rgba(221,119,116,.45);background:rgba(221,119,116,.1);color:#c2483f;letter-spacing:.2px;white-space:nowrap;flex-shrink:0}
   .nf-tile:hover .nf-remove{opacity:1}
-  .nf-tile .nf-remove:hover{background:rgba(221,119,116,.18);color:#c2483f}
+  .nf-tile .nf-remove:hover{background:rgba(221,119,116,.18);color:#c2483f;border-color:rgba(221,119,116,.5)}
   .nf-check{position:absolute;top:14px;right:16px;background:transparent;border:1.5px solid var(--line);color:transparent;width:22px;height:22px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;line-height:1;padding:0 0 1px 0;transition:all .15s;z-index:2}
   .nf-tile:hover .nf-check{border-color:var(--muted-2)}
   .nf-check:hover{border-color:var(--ok);color:#2ecc71}
@@ -607,9 +607,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.19';
+const SYSTEM_VERSION = '2026.11.04.20';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.04.20', date: '04/11/2026', changes: [
+    'Card de NF reorganizado: remove aspect-ratio quadrado, cresce com o conteúdo. Botão de remover (×) reposicionado para o canto superior direito ao lado do check. Seção Pedidos Hub mais compacta e integrada ao card, com ícone e separador tracejado amarelo.'
+  ]},
   { version: '2026.11.04.19', date: '04/11/2026', changes: [
     'Modo "Geral" (padrão) e "Por nota" para vincular Pedidos Hub. No modo Geral, campo único abaixo da área Notas Anexadas vincula todos os pedidos a todas as notas. No modo Por nota, cada card tem seu próprio campo.'
   ]},
@@ -5753,15 +5756,20 @@ function renderDetail(id){
                   ${unN ? `<span class="nf-unmatch" title="${unN} item${unN===1?'':'s'} sem correspondência no FBS">${unN} sem match ⚠</span>` : ''}
                 </div>
                 ${(s.hubPedidosMode || 'geral') === 'individual' ? `
-                <div class="nf-hub-pedidos" onclick="event.stopPropagation()" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:4px;align-items:center">
-                  <span style="font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;width:100%;margin-bottom:2px">Pedidos Hub vinculados</span>
-                  ${(nf.hubPedidos || []).map((code, i) => `
-                    <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(241,196,15,.14);color:var(--accent2);border:1px solid rgba(241,196,15,.4);border-radius:999px;padding:2px 4px 2px 8px;font-size:10.5px;font-weight:600">
-                      ${escapeHtml(code)}
-                      <button onclick="event.stopPropagation();removeHubPedidoFromNote('${s.id}','${nf.id}',${i})" title="Remover" style="background:transparent;border:0;color:var(--accent2);cursor:pointer;font-size:12px;line-height:1;padding:0 2px">×</button>
-                    </span>
-                  `).join('')}
-                  <input type="text" placeholder="+ Pedido" onkeydown="if(event.key==='Enter'){event.preventDefault();addHubPedidoToNote('${s.id}','${nf.id}',this.value);this.value=''}" onclick="event.stopPropagation()" style="background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:2px 8px;font-size:10.5px;width:76px;flex:1;min-width:66px" />
+                <div class="nf-hub-pedidos" onclick="event.stopPropagation()" style="margin-top:auto;padding-top:10px;border-top:1px dashed rgba(241,196,15,.3)">
+                  <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--accent2);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Pedidos Hub
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+                    ${(nf.hubPedidos || []).map((code, i) => `
+                      <span style="display:inline-flex;align-items:center;gap:3px;background:rgba(241,196,15,.14);color:var(--accent2);border:1px solid rgba(241,196,15,.4);border-radius:999px;padding:2px 3px 2px 8px;font-size:10.5px;font-weight:600">
+                        ${escapeHtml(code)}
+                        <button onclick="event.stopPropagation();removeHubPedidoFromNote('${s.id}','${nf.id}',${i})" title="Remover" style="background:transparent;border:0;color:var(--accent2);cursor:pointer;font-size:13px;line-height:1;padding:0 2px">×</button>
+                      </span>
+                    `).join('')}
+                    <input type="text" placeholder="+ código" onkeydown="if(event.key==='Enter'){event.preventDefault();addHubPedidoToNote('${s.id}','${nf.id}',this.value);this.value=''}" onclick="event.stopPropagation()" style="background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:3px 10px;font-size:10.5px;flex:1;min-width:80px" />
+                  </div>
                 </div>
                 ` : ''}
               </div>
