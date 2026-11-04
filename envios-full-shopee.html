@@ -572,6 +572,7 @@
       </div>
       <div class="side-sep"></div>
       <button class="side-item" onclick="toggleTheme()"><span class="side-ic" id="themeIcon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span><span class="side-label">Tema</span><span class="side-hint">Alternar claro/escuro</span></button>
+      <div id="sideVersion" style="padding:14px 16px 20px;font-size:10.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);margin-top:8px"></div>
     </nav>
   </aside>
 
@@ -596,6 +597,24 @@ const SHOPEE_ACCOUNTS = {
   sports: { id:'sports', label:'Shopee Sports', color:'#ee5b2e', shopId:'1559054473', logo:'data:image/webp;base64,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' }
 };
 const STORE_KEY = 'shopeeFullManager.v1';
+
+// Versão desta cópia do sistema — exibida no rodapé do menu lateral.
+// Comparada com a do Vercel para avisar se a página está desatualizada.
+const SYSTEM_VERSION = '2026.11.04.7';
+const VERSION_CHECK_URL = 'https://usee-envios-full.vercel.app/version.txt';
+async function _checkVersionDisplay(){
+  const el = document.getElementById('sideVersion');
+  if(!el) return;
+  el.innerHTML = `Versão do sistema: v${SYSTEM_VERSION}`;
+  try{
+    const resp = await fetch(VERSION_CHECK_URL + '?ts=' + Date.now(), { cache:'no-store' });
+    if(!resp.ok) return;
+    const remote = (await resp.text()).trim();
+    if(remote && remote !== SYSTEM_VERSION){
+      el.innerHTML = `Versão do sistema: v${SYSTEM_VERSION}<br><span style="color:#ef4444;font-weight:600">Você está numa versão antiga — <a onclick="location.reload();return false" style="color:#4ade80;text-decoration:underline;cursor:pointer">recarregue a página</a> para atualizar.</span>`;
+    }
+  }catch(e){}
+}
 const CATALOG_KEY = 'shopeeFullManager.catalog.v1';   // legacy localStorage key (migrated to IDB)
 const COLMAP_KEY = 'shopeeFullManager.colmap.v1';
 
@@ -6037,6 +6056,7 @@ document.addEventListener('drop', e => {
     }
   }catch(e){}
   render();
+  _checkVersionDisplay();
   try{
     await Promise.all([ loadStateAsync(), loadAllCatalogsAsync(), loadAllFbsAsync(), loadAllProductImagesAsync(), loadAllFbsSupplementsAsync() ]);
     if(typeof enrichAllCatalogs === 'function') enrichAllCatalogs();
