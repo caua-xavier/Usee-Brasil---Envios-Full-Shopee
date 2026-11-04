@@ -403,14 +403,19 @@
   .ship-row.cancelled:hover{border-color:rgba(239,68,68,.5);filter:brightness(.85) saturate(.9)}
   /* Wrappers que isolam a orelhinha do envio */
   .ship-card-wrap,.ship-row-wrap{position:relative;overflow:visible}
-  .ship-row-wrap > .ship-row,.ship-card-wrap > .card{position:relative;z-index:2;transition:border-top-left-radius .18s,border-bottom-left-radius .18s}
+  .ship-row-wrap > .ship-row,.ship-card-wrap > .card{position:relative;z-index:2;transition:border-top-left-radius .18s,border-bottom-left-radius .18s,border-top-right-radius .18s,border-bottom-right-radius .18s}
   /* No hover, zera o arredondamento da borda esquerda do envio para que a orelhinha encoste reto, sem vão nem sobreposição */
-  .ship-row-wrap:hover > .ship-row,.ship-card-wrap:hover > .card{border-top-left-radius:0;border-bottom-left-radius:0}
+  .ship-row-wrap:hover > .ship-row,.ship-card-wrap:hover > .card{border-top-left-radius:0;border-bottom-left-radius:0;border-top-right-radius:0;border-bottom-right-radius:0}
   /* Orelhinha de duplicar — invisível ao repouso; no hover desliza para fora pela esquerda, encostando no envio */
   .dup-ear{position:absolute;top:0;bottom:0;right:100%;width:40px;background:#fff;color:#000;border-radius:10px 0 0 10px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transform:translateX(24px);transition:opacity .18s linear,transform .28s cubic-bezier(.22,.61,.36,1);pointer-events:none;box-shadow:-3px 2px 8px rgba(0,0,0,.3);z-index:1}
   .dup-ear svg{width:18px;height:18px;display:block}
   .ship-row-wrap:hover .dup-ear,.ship-card-wrap:hover .dup-ear,.dup-ear:hover{opacity:1;transform:translateX(0);pointer-events:auto}
   .dup-ear:hover{background:#eaeaea}
+  /* Orelhinha da direita — excluir envio (mesmo estilo, cor vermelha) */
+  .del-ear{position:absolute;top:0;bottom:0;left:100%;width:40px;background:#ef4444;color:#fff;border-radius:0 10px 10px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transform:translateX(-24px);transition:opacity .18s linear,transform .28s cubic-bezier(.22,.61,.36,1);pointer-events:none;box-shadow:3px 2px 8px rgba(0,0,0,.3);z-index:1}
+  .del-ear svg{width:18px;height:18px;display:block}
+  .ship-row-wrap:hover .del-ear,.ship-card-wrap:hover .del-ear,.del-ear:hover{opacity:1;transform:translateX(0);pointer-events:auto}
+  .del-ear:hover{background:#dc2626}
   .ship-row .sr-name{font-weight:700;font-size:14px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ship-row .sr-meta{font-size:11px;color:var(--muted);margin-top:2px}
   .ship-row .sr-cell{font-size:12.5px;color:var(--txt)}
@@ -616,9 +621,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.29';
+const SYSTEM_VERSION = '2026.11.04.30';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.04.30', date: '04/11/2026', changes: [
+    'Orelhinha vermelha no lado direito do envio na lista — surge no hover e exclui o envio com confirmação. Mesmo estilo e animação da orelhinha de duplicar (da esquerda).'
+  ]},
   { version: '2026.11.04.29', date: '04/11/2026', changes: [
     'Fix: SKUs e identificadores agora são trimados ao gerar o snapshot JSON e ao indexar na extensão. Variações cujo SKU tinha espaço/caractere invisível no catálogo (ex: Branco,35 → 6E5D4C3B2A10 ) agora batem corretamente.'
   ]},
@@ -5584,6 +5592,7 @@ function renderList(){
           return `
             <div class="ship-row-wrap">
               <div class="dup-ear" onclick="event.stopPropagation();duplicateShipment('${s.id}')" title="Duplicar envio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
+              <div class="del-ear" onclick="event.stopPropagation();deleteShipment('${s.id}')" title="Excluir envio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div>
             <div class="ship-row ${s.sent?'sent':''}${s.cancelled?' cancelled':''}" onclick="route={view:'detail',shipmentId:'${s.id}'};render()">
               <button class="ship-check ${s.sent?'checked':''}" style="position:static;width:24px;height:24px;font-size:13px" onclick="event.stopPropagation();toggleShipmentSent('${s.id}')" title="${s.sent?'Desmarcar':'Marcar como enviado'}">✓</button>
               <div>
