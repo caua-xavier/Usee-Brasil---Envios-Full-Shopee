@@ -600,7 +600,7 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.8';
+const SYSTEM_VERSION = '2026.11.04.9';
 const VERSION_CHECK_URL = 'https://usee-envios-full.vercel.app/version.txt';
 async function _checkVersionDisplay(){
   const el = document.getElementById('sideVersion');
@@ -1385,7 +1385,6 @@ async function handleCatalogFile(file){
     }
     saveColMap(merged);
     toast(`Catálogo ${SHOPEE_ACCOUNTS[modalAccount].label} carregado: ${allRows.length} linhas`, 'ok');
-    openCatalogModal();
     render();
   }catch(err){
     console.error(err); toast('Erro lendo arquivo: ' + err.message, 'err');
@@ -1542,7 +1541,6 @@ async function handleFbsFile(file){
       });
     }catch(e){ return; }
     toast(`FBS ${SHOPEE_ACCOUNTS[modalAccount].label} carregado: ${allRows.length} linhas`, 'ok');
-    openFbsModal();
     render();
   }catch(err){
     console.error(err); toast('Erro lendo arquivo FBS: ' + err.message, 'err');
