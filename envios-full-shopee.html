@@ -607,9 +607,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.16';
+const SYSTEM_VERSION = '2026.11.04.17';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.04.17', date: '04/11/2026', changes: [
+    'Botão de copiar (📋) ao lado do código do envio (FBSINBR…) nas visualizações Lista, Grade e Calendário — clica e já copia para a área de transferência.'
+  ]},
   { version: '2026.11.04.16', date: '04/11/2026', changes: [
     'Linhas divisórias do menu lateral com visibilidade aumentada (cor com mais contraste e espaçamento maior ao redor).'
   ]},
@@ -4143,7 +4146,7 @@ function openCalendarModal(opts){
                         ${s.cancelled ? '<span style="color:#9ca3af;font-size:11px;font-weight:700">✕ cancelado</span>' : (s.sent ? '<span style="color:#2ecc71;font-size:11px;font-weight:700">✓ enviado</span>' : (_parseDateLocal(selectedKey) < today ? '<span style="color:#ef4444;font-size:11px;font-weight:700">atrasado</span>' : '<span style="color:#f59e0b;font-size:11px;font-weight:700">pendente</span>'))}
                       </div>
                       ${s.account ? `<div style="font-size:11px;color:${SHOPEE_ACCOUNTS[s.account].color};font-weight:600;margin-top:3px">${SHOPEE_ACCOUNTS[s.account].label}</div>` : ''}
-                      ${s.code ? `<div class="small mono" style="color:var(--muted);font-size:10.5px;margin-top:2px">${escapeHtml(s.code)}</div>` : ''}
+                      ${s.code ? `<div class="small mono" style="color:var(--muted);font-size:10.5px;margin-top:2px;display:inline-flex;align-items:center;gap:4px">${escapeHtml(s.code)}${copyBtn(s.code,'Código '+s.code)}</div>` : ''}
                       <div style="display:flex;gap:8px;margin-top:6px;font-size:10.5px;color:var(--muted);flex-wrap:wrap;align-items:center">
                         <span>${(s.notes||[]).length} NF</span>
                         <span>${(s.hubOrders||[]).length} Cross</span>
@@ -5498,7 +5501,7 @@ function renderList(){
               <button class="ship-check ${s.sent?'checked':''}" style="position:static;width:24px;height:24px;font-size:13px" onclick="event.stopPropagation();toggleShipmentSent('${s.id}')" title="${s.sent?'Desmarcar':'Marcar como enviado'}">✓</button>
               <div>
                 <div class="sr-name">${escapeHtml(s.name || '(sem nome)')}</div>
-                <div class="mono" style="color:${s.code?'var(--muted)':'var(--err)'};font-weight:500;font-size:11px;margin-top:2px">${s.code ? escapeHtml(s.code) : 'Sem Código de Envio'}</div>
+                <div class="mono" style="color:${s.code?'var(--muted)':'var(--err)'};font-weight:500;font-size:11px;margin-top:2px;display:inline-flex;align-items:center;gap:4px">${s.code ? `${escapeHtml(s.code)}${copyBtn(s.code,'Código '+s.code)}` : 'Sem Código de Envio'}</div>
               </div>
               <div class="sr-cell">${dateLine}</div>
               <div class="sr-cell">${acct ? `<span style="color:${acct.color};font-weight:600">${acct.label}</span>` : '<span style="color:var(--muted)">sem conta</span>'}</div>
@@ -5521,7 +5524,7 @@ function renderList(){
             <div class="card ${s.sent?'sent':''}${s.cancelled?' cancelled':''}" onclick="route={view:'detail',shipmentId:'${s.id}'};render()" style="${s.cancelled?'filter:brightness(.65) saturate(.75)':''};position:relative">
               <button class="ship-check ${s.sent?'checked':''}" onclick="event.stopPropagation();toggleShipmentSent('${s.id}')" title="${s.sent?'Desmarcar como enviado':'Marcar como enviado com sucesso'}">✓</button>
               <div class="row" style="justify-content:space-between;gap:8px;align-items:flex-start;padding-right:48px">
-                <h3 style="margin:0">${escapeHtml(s.name || s.code || '(sem nome)')}</h3>${s.name && s.code ? `<div class="small mono" style="color:var(--muted);margin-top:2px;font-size:10.5px">${escapeHtml(s.code)}</div>` : ''}
+                <h3 style="margin:0">${escapeHtml(s.name || s.code || '(sem nome)')}</h3>${s.name && s.code ? `<div class="small mono" style="color:var(--muted);margin-top:2px;font-size:10.5px;display:inline-flex;align-items:center;gap:4px">${escapeHtml(s.code)}${copyBtn(s.code,'Código '+s.code)}</div>` : ''}
                 ${s.account ? `<div class="acct-badge ${s.account}"><img src="${SHOPEE_ACCOUNTS[s.account].logo}" alt=""/>${SHOPEE_ACCOUNTS[s.account].label}</div>` : '<div class="acct-pill-empty">sem conta</div>'}
               </div>
               <div class="meta" style="margin-top:4px">
