@@ -27,11 +27,11 @@
 
     /* Semantic mapping mantendo os nomes existentes */
     --bg:#FFFFFF;
-    --bg2:#F4F4F4;
+    --bg2:#e7e7e7;
     --panel:#FFFFFF;
-    --panel2:#F4F4F4;
-    --line:#e2e2e2;
-    --line-soft:#eeeeee;
+    --panel2:#e7e7e7;
+    --line:#cfcfcf;
+    --line-soft:#dcdcdc;
     --txt:#333333;
     --txt-strong:#262727;
     --muted:#7a7a7a;
@@ -45,7 +45,7 @@
     --warn:#dc8f38;
     --err:#dd7774;
     --info:#3d9ccc;
-    --soft:#eeeeee;
+    --soft:#dcdcdc;
   }
   /* Tema escuro — mantém a identidade Usee, ajusta contraste */
   :root[data-theme="dark"]{
@@ -608,9 +608,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.22';
+const SYSTEM_VERSION = '2026.11.04.23';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.04.23', date: '04/11/2026', changes: [
+    'Tema claro com tons de cinza um pouco mais escuros em fundos secundários (--panel2, --bg2) e linhas (--line, --line-soft, --soft) para melhorar o contraste.'
+  ]},
   { version: '2026.11.04.22', date: '04/11/2026', changes: [
     'Cards de Pedidos Cross (Hub) também ficam compactos, com altura seguindo o conteúdo — sem espaço vazio no meio.'
   ]},
