@@ -621,9 +621,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.04.30';
+const SYSTEM_VERSION = '2026.11.05.1';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.05.1', date: '05/11/2026', changes: [
+    'Paginação na lista de envios: até 10 por página, com botões Anterior/Próxima e indicador Página X de Y · M–N de total. Qualquer troca de filtro/ordenação volta para a página 1. Alternar entre Lista/Grade mantém a página.'
+  ]},
   { version: '2026.11.04.30', date: '04/11/2026', changes: [
     'Orelhinha vermelha no lado direito do envio na lista — surge no hover e exclui o envio com confirmação. Mesmo estilo e animação da orelhinha de duplicar (da esquerda).'
   ]},
@@ -5437,6 +5440,9 @@ function saveListFilter(){ try{ localStorage.setItem(LIST_FILTER_KEY, JSON.strin
 let _listFilterDebounce = null;
 function setListFilter(patch){
   Object.assign(listFilter, patch);
+  // Qualquer mudança de filtro/ordenação volta para a página 1 — exceto quando o patch é só viewMode (grade/lista)
+  const keys = Object.keys(patch);
+  if(!(keys.length === 1 && keys[0] === 'viewMode')) _listPage = 1;
   saveListFilter();
   // Debounce render quando a busca está sendo digitada para não perder foco
   if(patch.search !== undefined){
@@ -5504,11 +5510,25 @@ function filterAndSortShipments(shipments){
   return arr;
 }
 
+const SHIPMENTS_PER_PAGE = 10;
+let _listPage = 1;
+function setListPage(p){ _listPage = Math.max(1, p); render(); }
 function renderList(){
   const v = document.getElementById('view');
   const allCount = state.shipments.length;
   const sh = filterAndSortShipments(state.shipments);
   const sentCount = state.shipments.filter(x=>x.sent).length;
+  const totalPages = Math.max(1, Math.ceil(sh.length / SHIPMENTS_PER_PAGE));
+  if(_listPage > totalPages) _listPage = totalPages;
+  const pageStart = (_listPage - 1) * SHIPMENTS_PER_PAGE;
+  const paged = sh.slice(pageStart, pageStart + SHIPMENTS_PER_PAGE);
+  const pagerHtml = (sh.length > SHIPMENTS_PER_PAGE) ? `
+    <div class="row" style="justify-content:center;align-items:center;gap:8px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn secondary sm" onclick="setListPage(${_listPage-1})" ${_listPage<=1?'disabled':''} style="padding:7px 12px;font-size:12px;${_listPage<=1?'opacity:.4;cursor:not-allowed':''}">← Anterior</button>
+      <span style="font-size:12.5px;color:var(--muted);font-weight:600">Página <strong style="color:var(--txt)">${_listPage}</strong> de ${totalPages} · <span style="color:var(--muted)">${pageStart+1}–${Math.min(pageStart+SHIPMENTS_PER_PAGE, sh.length)} de ${sh.length}</span></span>
+      <button class="btn secondary sm" onclick="setListPage(${_listPage+1})" ${_listPage>=totalPages?'disabled':''} style="padding:7px 12px;font-size:12px;${_listPage>=totalPages?'opacity:.4;cursor:not-allowed':''}">Próxima →</button>
+    </div>
+  ` : '';
   v.innerHTML = `
     <div class="topbar">
       <div>
@@ -5579,7 +5599,7 @@ function renderList(){
         <div class="sr-cell num">Volumes</div>
       </div>
       <div class="ship-list">
-        ${sh.map(s => {
+        ${paged.map(s => {
           const agg = aggregateShipment(s);
           const matchedAll = agg.totals.filter(t=>t.matched);
           const matched = matchedAll.length;
@@ -5612,7 +5632,7 @@ function renderList(){
       </div>
     ` : `
       <div class="grid cards">
-        ${sh.map(s => {
+        ${paged.map(s => {
           const agg = aggregateShipment(s);
           const matched = agg.totals.filter(t=>t.matched).length;
           const un = agg.totals.filter(t=>!t.matched).length;
@@ -5642,6 +5662,7 @@ function renderList(){
         }).join('')}
       </div>
     `)}
+    ${pagerHtml}
   `;
 }
 
