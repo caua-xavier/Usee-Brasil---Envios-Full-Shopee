@@ -621,9 +621,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.05.1';
+const SYSTEM_VERSION = '2026.11.05.2';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.05.2', date: '05/11/2026', changes: [
+    'Emojis de etiqueta (🏷️) substituídos por ícone SVG vetorizado em toda a interface: Definir marca em massa, Marca, + Definir marca, Identificador do Envio e identificador copiável.'
+  ]},
   { version: '2026.11.05.1', date: '05/11/2026', changes: [
     'Paginação na lista de envios: até 10 por página, com botões Anterior/Próxima e indicador Página X de Y · M–N de total. Qualquer troca de filtro/ordenação volta para a página 1. Alternar entre Lista/Grade mantém a página.'
   ]},
@@ -1069,7 +1072,8 @@ function ic(name, opts){
     'puzzle': '<path d="M19 11h-4V7a3 3 0 0 0-6 0v4H5a2 2 0 0 0-2 2v2a3 3 0 0 0 3 3v4h4v-4a3 3 0 0 1 6 0v4h4v-4a3 3 0 0 0 3-3v-2a2 2 0 0 0-2-2z"/>',
     'close': '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
     'check': '<polyline points="20 6 9 17 4 12"/>',
-    'calendar': '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'
+    'calendar': '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    'tag': '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>'
   };
   const body = paths[name] || '';
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline-block">${body}</svg>`;
@@ -3337,7 +3341,7 @@ function openProductRepoModal(opts){
                 <span id="_repoBulkCount">${_repoSelected.size}</span> produto(s) selecionado(s) no total
               </div>
               <div class="row" style="gap:6px">
-                <button class="btn sm" style="background:var(--accent);color:#001114;font-weight:700;padding:5px 12px;font-size:11.5px" onclick="bulkSetBrand()">🏷️ Definir marca em massa</button>
+                <button class="btn sm" style="background:var(--accent);color:#001114;font-weight:700;padding:5px 12px;font-size:11.5px" onclick="bulkSetBrand()">${ic('tag',{size:12,color:'currentColor'})} Definir marca em massa</button>
                 <button class="btn ghost sm" style="padding:5px 10px;font-size:11px" onclick="clearRepoSelection()">× Limpar seleção</button>
               </div>
             </div>
@@ -3680,8 +3684,8 @@ function openProductRepoEdit(productId){
           ${(() => {
             const currentBrand = getBrand(account, p.productId);
             return currentBrand
-              ? `<button class="btn sm" style="background:rgba(30,212,224,.12);color:var(--accent);border:1px solid rgba(30,212,224,.4)" onclick="promptEditBrand('${account}','${escapeHtml(p.productId)}','${escapeHtml(currentBrand).replace(/'/g,'&apos;')}');openProductRepoEdit('${escapeHtml(p.productId)}')">🏷️ Marca: <strong>${escapeHtml(currentBrand)}</strong> ✎</button>`
-              : `<button class="btn sm ghost" style="border:1px dashed var(--line)" onclick="promptEditBrand('${account}','${escapeHtml(p.productId)}','');openProductRepoEdit('${escapeHtml(p.productId)}')">🏷️ + Definir marca</button>`;
+              ? `<button class="btn sm" style="background:rgba(30,212,224,.12);color:var(--accent);border:1px solid rgba(30,212,224,.4)" onclick="promptEditBrand('${account}','${escapeHtml(p.productId)}','${escapeHtml(currentBrand).replace(/'/g,'&apos;')}');openProductRepoEdit('${escapeHtml(p.productId)}')">${ic('tag',{size:12,color:'currentColor'})} Marca: <strong>${escapeHtml(currentBrand)}</strong> ✎</button>`
+              : `<button class="btn sm ghost" style="border:1px dashed var(--line)" onclick="promptEditBrand('${account}','${escapeHtml(p.productId)}','');openProductRepoEdit('${escapeHtml(p.productId)}')">${ic('tag',{size:12,color:'currentColor'})} + Definir marca</button>`;
           })()}
           <button class="btn sm secondary" onclick="openProductRepoModal()">← Voltar</button>
         </div>
@@ -5894,7 +5898,7 @@ function renderDetail(id){
 
     ${(s.notes.length || (s.hubOrders||[]).length) ? `
       <div class="panel">
-        <h2>🏷️ Identificador do Envio <span class="count">copiável</span></h2>
+        <h2 style="display:inline-flex;align-items:center;gap:8px">${ic('tag',{size:18,color:'var(--accent)'})} Identificador do Envio <span class="count">copiável</span></h2>
         <div class="small" style="margin-bottom:8px;color:var(--muted)">Texto pronto para copiar e colar em sistemas externos (ex: identificação do envio Full).</div>
         <div style="display:flex;gap:8px;align-items:stretch">
           <textarea id="shipIdText" readonly style="flex:1;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;font-family:'JetBrains Mono',monospace;resize:vertical;min-height:48px" onclick="this.select()">${escapeHtml(shipmentIdentifierText(s))}</textarea>
@@ -5936,7 +5940,7 @@ function renderDetail(id){
             return `
               <div style="margin-bottom:18px">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:${bgColor};border:1px solid ${borderColor};border-radius:10px 10px 0 0;border-bottom:0;font-weight:700">
-                  <span style="display:inline-flex;align-items:center;gap:8px;color:${color};font-size:13.5px;text-transform:uppercase;letter-spacing:.6px">🏷️ ${escapeHtml(label)}</span>
+                  <span style="display:inline-flex;align-items:center;gap:8px;color:${color};font-size:13.5px;text-transform:uppercase;letter-spacing:.6px">${ic('tag',{size:13,color:'currentColor'})} ${escapeHtml(label)}</span>
                   <span class="small" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:normal">${items.length} produto${items.length===1?'':'s'} · ${totalVars} variações · ${totalUnits} unidades</span>
                 </div>
                 <div class="scroll" style="border:1px solid ${borderColor};border-radius:0 0 10px 10px;overflow:hidden">
