@@ -621,9 +621,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.05.2';
+const SYSTEM_VERSION = '2026.11.13.1';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.13.1', date: '13/11/2026', changes: [
+    'Botão "Importar Envio" no topo da lista, ao lado de Importar Vendas. Abre menu com duas opções: "Importar arquivo JSON" (restaurar envios de outro dispositivo) e "Selecionar envios para exportar" (abre modal com checkboxes para escolher quais envios baixar como JSON). Preserva IDs; na importação de id conflitante, pergunta se substitui, pula ou duplica com novo id.'
+  ]},
   { version: '2026.11.05.2', date: '05/11/2026', changes: [
     'Emojis de etiqueta (🏷️) substituídos por ícone SVG vetorizado em toda a interface: Definir marca em massa, Marca, + Definir marca, Identificador do Envio e identificador copiável.'
   ]},
@@ -1969,6 +1972,143 @@ function createShipment(){
   saveState();
   route = { view:'detail', shipmentId: s.id };
   render();
+}
+
+/* ---------- Import/Export de Envios individuais ---------- */
+function toggleImportShipmentMenu(force){
+  const el = document.getElementById('importShipmentMenu');
+  if(!el) return;
+  const open = (typeof force === 'boolean') ? force : el.style.display === 'none';
+  el.style.display = open ? 'block' : 'none';
+  if(open){
+    // Fecha ao clicar fora
+    setTimeout(() => {
+      const closer = (ev) => {
+        const wrap = document.getElementById('importShipmentWrap');
+        if(wrap && !wrap.contains(ev.target)){ toggleImportShipmentMenu(false); document.removeEventListener('click', closer); }
+      };
+      document.addEventListener('click', closer);
+    }, 0);
+  }
+}
+async function handleImportShipmentFile(ev){
+  const f = ev.target.files[0]; if(!f) return;
+  ev.target.value = '';
+  try{
+    const text = await f.text();
+    const data = JSON.parse(text);
+    const incoming = Array.isArray(data) ? data : (Array.isArray(data.shipments) ? data.shipments : null);
+    if(!incoming){ toast('Arquivo inválido: esperado um JSON com array de envios','err'); return; }
+    let added = 0, skipped = 0, replaced = 0, overwriteAll = null;
+    for(const sh of incoming){
+      if(!sh || !sh.id){ skipped++; continue; }
+      const existing = state.shipments.find(x => x.id === sh.id);
+      if(existing){
+        let decide = overwriteAll;
+        if(decide === null){
+          const choice = prompt(`Envio já existe: "${sh.name||sh.code||sh.id}"\n\nDigite:\n  s = substituir\n  n = pular\n  d = duplicar (novo id)\n  S = substituir todos os duplicados\n  N = pular todos os duplicados`, 's');
+          if(choice === null) return; // cancelou toda a importação
+          if(choice === 'S'){ overwriteAll = 's'; decide = 's'; }
+          else if(choice === 'N'){ overwriteAll = 'n'; decide = 'n'; }
+          else decide = choice || 'n';
+        }
+        if(decide === 's'){
+          Object.assign(existing, sh);
+          replaced++;
+        } else if(decide === 'd'){
+          const cp = JSON.parse(JSON.stringify(sh));
+          cp.id = uid();
+          cp.name = (cp.name || '(sem nome)') + ' (importado)';
+          state.shipments.push(cp);
+          added++;
+        } else {
+          skipped++;
+        }
+      } else {
+        state.shipments.push(sh);
+        added++;
+      }
+    }
+    saveState();
+    toast(`Importação: ${added} novo(s), ${replaced} substituído(s), ${skipped} pulado(s)`,'ok');
+    render();
+  }catch(err){
+    console.error(err);
+    toast('Erro lendo arquivo: '+err.message,'err');
+  }
+}
+let _exportShipSelection = new Set();
+function openExportShipmentsModal(){
+  _exportShipSelection = new Set();
+  const list = (state.shipments||[]).slice().sort((a,b)=> String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+  const wrap = document.getElementById('modalWrap');
+  wrap.innerHTML = `
+    <div class="modal" onclick="if(event.target===this) closeModal()">
+      <div class="box" style="max-width:720px;width:95vw;max-height:85vh;display:flex;flex-direction:column">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h3 style="margin:0;display:inline-flex;align-items:center;gap:8px">${ic('download',{size:20,color:'var(--accent2)'})} Selecionar envios para exportar</h3>
+          <button class="btn secondary" onclick="closeModal()">Fechar</button>
+        </div>
+        <div class="row" style="justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+          <div style="font-size:12.5px;color:var(--muted)"><span id="selCount">0</span> de ${list.length} selecionado(s)</div>
+          <div class="row" style="gap:6px">
+            <button class="btn ghost sm" onclick="selectAllShipmentsForExport(true)" style="padding:5px 10px;font-size:11px">Selecionar todos</button>
+            <button class="btn ghost sm" onclick="selectAllShipmentsForExport(false)" style="padding:5px 10px;font-size:11px">Limpar</button>
+          </div>
+        </div>
+        <div style="overflow:auto;flex:1;border:1px solid var(--line);border-radius:10px;background:var(--panel2)">
+          ${list.length===0 ? '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Nenhum envio para exportar.</div>' : list.map(s => `
+            <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px">
+              <input type="checkbox" value="${escapeHtml(s.id)}" onchange="toggleShipExport(this.value,this.checked)" style="width:16px;height:16px;cursor:pointer" />
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;color:var(--txt)">${escapeHtml(s.name||'(sem nome)')}</div>
+                <div class="small" style="color:var(--muted);font-size:10.5px;display:flex;gap:8px;flex-wrap:wrap">
+                  ${s.code ? `<span class="mono">${escapeHtml(s.code)}</span>·` : ''}
+                  ${s.date ? `<span>${fmtDate(s.date)}</span>·` : ''}
+                  ${s.account ? `<span style="color:${SHOPEE_ACCOUNTS[s.account]?.color||'var(--muted)'}">${SHOPEE_ACCOUNTS[s.account]?.label||s.account}</span>·` : ''}
+                  <span>${(s.notes||[]).length} NF</span>·
+                  <span>${(s.hubOrders||[]).length} Cross</span>
+                  ${s.sent?'· <span style="color:#2ecc71">✓ enviado</span>':''}
+                  ${s.cancelled?'· <span style="color:#ef4444">✕ cancelado</span>':''}
+                </div>
+              </div>
+            </label>
+          `).join('')}
+        </div>
+        <div class="row" style="justify-content:flex-end;margin-top:14px;gap:8px">
+          <button class="btn secondary" onclick="closeModal()">Cancelar</button>
+          <button class="btn shopee" onclick="exportSelectedShipments()">⇩ Exportar JSON</button>
+        </div>
+      </div>
+    </div>`;
+}
+function toggleShipExport(id, checked){
+  if(checked) _exportShipSelection.add(id); else _exportShipSelection.delete(id);
+  const el = document.getElementById('selCount'); if(el) el.textContent = String(_exportShipSelection.size);
+}
+function selectAllShipmentsForExport(all){
+  _exportShipSelection = new Set();
+  const inputs = document.querySelectorAll('.modal input[type="checkbox"]');
+  inputs.forEach(i => { i.checked = !!all; if(all) _exportShipSelection.add(i.value); });
+  const el = document.getElementById('selCount'); if(el) el.textContent = String(_exportShipSelection.size);
+}
+function exportSelectedShipments(){
+  if(_exportShipSelection.size === 0){ toast('Selecione pelo menos um envio','warn'); return; }
+  const list = state.shipments.filter(s => _exportShipSelection.has(s.id));
+  const payload = {
+    type: 'usee-hub-envios-export',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    shipments: list
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `envios-export-${list.length}-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`${list.length} envio(s) exportado(s)`,'ok');
+  closeModal();
 }
 function duplicateShipment(id){
   const orig = getShipment(id); if(!orig) return;
@@ -5544,6 +5684,14 @@ function renderList(){
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">
         <button class="btn secondary" style="background:rgba(30,212,224,.12);color:var(--accent);border:1px solid rgba(30,212,224,.4);display:inline-flex;align-items:center;gap:6px" onclick="openSalesImportModal()" title="Importar relatórios de vendas Shopee (zip mensal com planilhas)">${ic('chart-bars',{size:14,color:'currentColor'})} Importar Vendas</button>
+        <div style="position:relative;display:inline-block" id="importShipmentWrap">
+          <button class="btn secondary" style="background:rgba(241,196,15,.12);color:var(--accent2);border:1px solid rgba(241,196,15,.4);display:inline-flex;align-items:center;gap:6px" onclick="toggleImportShipmentMenu()" title="Importar / exportar envios individualmente">${ic('download',{size:14,color:'currentColor'})} Importar Envio ▾</button>
+          <div id="importShipmentMenu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);min-width:260px;z-index:100;overflow:hidden">
+            <button class="btn ghost" style="width:100%;text-align:left;padding:10px 14px;border-radius:0;display:flex;align-items:center;gap:10px;font-size:13px;border:0;border-bottom:1px solid var(--line)" onclick="toggleImportShipmentMenu(false);document.getElementById('importShipmentFile').click()">${ic('upload',{size:14,color:'var(--accent2)'})} Importar arquivo JSON</button>
+            <button class="btn ghost" style="width:100%;text-align:left;padding:10px 14px;border-radius:0;display:flex;align-items:center;gap:10px;font-size:13px;border:0" onclick="toggleImportShipmentMenu(false);openExportShipmentsModal()">${ic('download',{size:14,color:'var(--accent2)'})} Selecionar envios para exportar</button>
+          </div>
+          <input type="file" id="importShipmentFile" accept="application/json,.json" style="display:none" onchange="handleImportShipmentFile(event)" />
+        </div>
         <button class="btn shopee" onclick="createShipment()">+ Criar Novo Envio</button>
       </div>
     </div>
