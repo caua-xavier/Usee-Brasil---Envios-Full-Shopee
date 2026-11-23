@@ -621,9 +621,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.13.1';
+const SYSTEM_VERSION = '2026.11.23.1';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.23.1', date: '23/11/2026', changes: [
+    'Data do envio aceita qualquer dia da semana. Removida a restrição que só permitia Segunda, Terça ou Quinta (regra obsoleta da Shopee).'
+  ]},
   { version: '2026.11.13.1', date: '13/11/2026', changes: [
     'Botão "Importar Envio" no topo da lista, ao lado de Importar Vendas. Abre menu com duas opções: "Importar arquivo JSON" (restaurar envios de outro dispositivo) e "Selecionar envios para exportar" (abre modal com checkboxes para escolher quais envios baixar como JSON). Preserva IDs; na importação de id conflitante, pergunta se substitui, pula ou duplica com novo id.'
   ]},
@@ -1759,18 +1762,7 @@ function nextValidShipmentDate(){
   return `${y}-${m}-${dd}`;
 }
 function validateShipmentDate(shipmentId, value, inputEl){
-  const sh = getShipment(shipmentId); if(!sh) return;
-  if(!value){
-    updateShipment(shipmentId, { date: '' });
-    return;
-  }
-  const d = new Date(value + 'T00:00:00');
-  const dow = d.getDay(); // 0=Dom .. 6=Sab
-  if(dow !== 1 && dow !== 2 && dow !== 4){
-    toast('Apenas Segunda, Terça ou Quinta-feira', 'err');
-    if(inputEl) inputEl.value = sh.date || '';
-    return;
-  }
+  if(!value){ updateShipment(shipmentId, { date: '' }); return; }
   updateShipment(shipmentId, { date: value });
 }
 
@@ -5867,7 +5859,7 @@ function renderDetail(id){
         <div style="display:flex;align-items:flex-start;gap:8px">
           <span class="small" style="text-transform:uppercase;letter-spacing:.5px;font-weight:700;color:var(--muted);white-space:nowrap;padding-top:11px">Data</span>
           <div style="display:flex;flex-direction:column;gap:3px">
-            <input type="date" value="${s.date||''}" onchange="validateShipmentDate('${s.id}',this.value,this)" title="Aceita Segunda, Terça ou Quinta (passado ou futuro)" style="color-scheme:dark;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:13px;width:160px;height:38px;box-sizing:border-box" />
+            <input type="date" value="${s.date||''}" onchange="validateShipmentDate('${s.id}',this.value,this)" title="Data do envio" style="color-scheme:dark;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:0 12px;font-size:13px;width:160px;height:38px;box-sizing:border-box" />
             ${s.sent ? `<a onclick="editSentDateModal('${s.id}')" style="font-size:10.5px;font-weight:700;color:#2ecc71;cursor:pointer;text-align:center;white-space:nowrap" title="Editar data efetiva de envio">Enviado em ${s.sentAt ? fmtDate(s.sentAt) : '—'}</a>` : ''}
           </div>
         </div>
