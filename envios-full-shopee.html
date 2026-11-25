@@ -621,9 +621,12 @@ const STORE_KEY = 'shopeeFullManager.v1';
 
 // Versão desta cópia do sistema — exibida no rodapé do menu lateral.
 // Comparada com a do Vercel para avisar se a página está desatualizada.
-const SYSTEM_VERSION = '2026.11.23.1';
+const SYSTEM_VERSION = '2026.11.25.1';
 // Histórico de versões — adicionar entrada no topo a cada publicação nova.
 const CHANGELOG = [
+  { version: '2026.11.25.1', date: '25/11/2026', changes: [
+    'Novo botão "Distribuidor de Notas" ao lado de "Pedidos Hub". Abre modal que lista cada produto × variação × NF com um seletor de destino (Shopee, Mercado Livre, Amazon, CD). Mostra totais ao vivo no topo e por produto, pills por variação. Botões rápidos "→ Shopee/ML/Amazon/CD" aplicam o destino a todas as variações do produto de uma vez.'
+  ]},
   { version: '2026.11.23.1', date: '23/11/2026', changes: [
     'Data do envio aceita qualquer dia da semana. Removida a restrição que só permitia Segunda, Terça ou Quinta (regra obsoleta da Shopee).'
   ]},
@@ -2235,6 +2238,165 @@ function setHubPedidosMode(shipmentId, mode){
   s.hubPedidosMode = mode;
   saveState();
   render();
+}
+
+/* ---------- Distribuidor de Notas ---------- */
+const DISTRIBUIDOR_DESTINOS = [
+  { id:'shopee', label:'Shopee', color:'#ee5b2e' },
+  { id:'ml',     label:'Mercado Livre', color:'#ffe600', textColor:'#000' },
+  { id:'amazon', label:'Amazon', color:'#ff9900' },
+  { id:'cd',     label:'CD', color:'#6b7280' }
+];
+function _distKey(nfId, prodId, sku){
+  return `${nfId}||${prodId||''}||${sku||''}`;
+}
+function setDistribuicao(shipmentId, nfId, prodId, sku, destId){
+  const s = getShipment(shipmentId); if(!s) return;
+  if(!s.distribuicao) s.distribuicao = {};
+  const k = _distKey(nfId, prodId, sku);
+  if(destId) s.distribuicao[k] = destId; else delete s.distribuicao[k];
+  saveState();
+  _renderDistribuidorInner(shipmentId);
+}
+function setDistribuicaoBulk(shipmentId, prodId, destId){
+  // Aplica o destino a TODAS as variações de todas as NFs daquele produto
+  const s = getShipment(shipmentId); if(!s) return;
+  const agg = aggregateShipment(s);
+  if(!s.distribuicao) s.distribuicao = {};
+  for(const it of agg.items){
+    if(!it.nfId) continue;
+    if(it.productId !== prodId) continue;
+    const k = _distKey(it.nfId, it.productId, it.sku || '');
+    if(destId) s.distribuicao[k] = destId; else delete s.distribuicao[k];
+  }
+  saveState();
+  _renderDistribuidorInner(shipmentId);
+}
+function openDistribuidorNotas(shipmentId){
+  const s = getShipment(shipmentId); if(!s) return;
+  const wrap = document.getElementById('modalWrap');
+  wrap.innerHTML = `
+    <div class="modal" onclick="if(event.target===this) closeModal()">
+      <div class="box" style="max-width:1200px;width:98vw;max-height:92vh;display:flex;flex-direction:column">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0;display:inline-flex;align-items:center;gap:8px">${ic('box',{size:22,color:'var(--accent2)'})} Distribuidor de Notas <span style="font-size:12px;color:var(--muted);font-weight:500;margin-left:6px">— ${escapeHtml(s.name||'(sem nome)')}</span></h3>
+          <button class="btn secondary" onclick="closeModal()">Fechar</button>
+        </div>
+        <div id="distribuidorInner" style="overflow:auto;flex:1"></div>
+      </div>
+    </div>`;
+  _renderDistribuidorInner(shipmentId);
+}
+function _renderDistribuidorInner(shipmentId){
+  const s = getShipment(shipmentId); if(!s) return;
+  const container = document.getElementById('distribuidorInner');
+  if(!container) return;
+  const agg = aggregateShipment(s);
+  // Agrupa por produto
+  const prodMap = new Map();
+  for(const it of agg.items){
+    if(!it.nfId) continue;
+    const pid = it.productId || '__sem_match__';
+    if(!prodMap.has(pid)){
+      prodMap.set(pid, { productId: it.productId, productName: it.productName || it.description || '(sem nome)', items: [] });
+    }
+    prodMap.get(pid).items.push(it);
+  }
+  // Mapa de nfId → número da NF para cabeçalho
+  const nfLabel = new Map();
+  for(const nf of (s.notes||[])) nfLabel.set(nf.id, nf.nNF || nf.id);
+  for(const ho of (s.hubOrders||[])) nfLabel.set(ho.id, '#'+(ho.pedidoNum||ho.id));
+  const dist = s.distribuicao || {};
+  // Totais globais por destino
+  const totGlobal = { shopee:0, ml:0, amazon:0, cd:0, nenhum:0 };
+  const prodBlocks = [];
+  for(const [pid, group] of prodMap.entries()){
+    // Agrupa por variação (sku) dentro do produto
+    const varMap = new Map();
+    for(const it of group.items){
+      const sku = it.sku || '__semSku__';
+      if(!varMap.has(sku)){
+        varMap.set(sku, { sku: it.sku, variationName: it.variationName || '', ean: it.ean || '', entries: [] });
+      }
+      varMap.get(sku).entries.push(it);
+    }
+    // Totais do produto por destino
+    const totProduto = { shopee:0, ml:0, amazon:0, cd:0, nenhum:0 };
+    const varRows = [];
+    for(const [sku, v] of varMap.entries()){
+      const totVar = { shopee:0, ml:0, amazon:0, cd:0, nenhum:0 };
+      const nfRows = [];
+      for(const it of v.entries){
+        const k = _distKey(it.nfId, pid, sku === '__semSku__' ? '' : sku);
+        const chosen = dist[k] || 'nenhum';
+        const qty = Number(it.qty) || 0;
+        totVar[chosen] += qty;
+        const nfName = nfLabel.get(it.nfId) || it.nfId;
+        const destOptions = DISTRIBUIDOR_DESTINOS.map(d => `<option value="${d.id}" ${chosen===d.id?'selected':''}>${d.label}</option>`).join('');
+        nfRows.push(`
+          <tr>
+            <td style="padding:5px 10px;color:var(--muted);font-size:11.5px;font-family:ui-monospace,monospace">${escapeHtml(String(nfName))}</td>
+            <td style="padding:5px 10px;text-align:right;font-weight:700;color:var(--txt)">${qty}</td>
+            <td style="padding:5px 10px">
+              <select onchange="setDistribuicao('${s.id}','${it.nfId}','${pid}','${sku==='__semSku__'?'':sku}',this.value)" style="background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:11.5px;width:100%">
+                <option value="" ${chosen==='nenhum'?'selected':''}>— Escolher —</option>
+                ${destOptions}
+              </select>
+            </td>
+          </tr>`);
+      }
+      for(const k of Object.keys(totVar)) totProduto[k] += totVar[k];
+      // Pills de totais por variação
+      const varPills = DISTRIBUIDOR_DESTINOS.map(d => totVar[d.id]>0
+        ? `<span style="display:inline-flex;align-items:center;gap:3px;background:${d.color};color:${d.textColor||'#fff'};padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:700">${d.label.substring(0,3)} ${totVar[d.id]}</span>`
+        : '').join(' ');
+      const varPendente = totVar.nenhum > 0 ? `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--line);color:var(--muted);padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:700">? ${totVar.nenhum}</span>` : '';
+      varRows.push(`
+        <div style="margin:10px 0 2px;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+            <div style="font-size:12.5px;font-weight:700;color:var(--txt-strong)">
+              ${v.variationName ? escapeHtml(v.variationName) : '<em style="color:var(--muted);font-weight:400">sem variação</em>'}
+              ${v.sku ? `<span class="mono" style="color:var(--muted);font-size:10.5px;margin-left:6px">${escapeHtml(v.sku)}</span>` : ''}
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">${varPills}${varPendente}</div>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:11.5px">
+            <thead><tr style="background:var(--panel2)">
+              <th style="padding:4px 10px;text-align:left;font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px">Origem</th>
+              <th style="padding:4px 10px;text-align:right;font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px">Qtd</th>
+              <th style="padding:4px 10px;text-align:left;font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;width:180px">Destino</th>
+            </tr></thead>
+            <tbody>${nfRows.join('')}</tbody>
+          </table>
+        </div>`);
+    }
+    for(const k of Object.keys(totProduto)) totGlobal[k] += totProduto[k];
+    const prodPills = DISTRIBUIDOR_DESTINOS.map(d => `<span style="background:${d.color};color:${d.textColor||'#fff'};padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700">${d.label}: ${totProduto[d.id]}</span>`).join(' ');
+    const prodPend = totProduto.nenhum > 0 ? `<span style="background:var(--line);color:var(--muted);padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700">Pendente: ${totProduto.nenhum}</span>` : '';
+    const bulkButtons = DISTRIBUIDOR_DESTINOS.map(d => `<button onclick="setDistribuicaoBulk('${s.id}','${pid}','${d.id}')" title="Enviar todo o produto para ${d.label}" style="background:${d.color};color:${d.textColor||'#fff'};border:0;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">→ ${d.label}</button>`).join(' ');
+    prodBlocks.push(`
+      <div style="margin-bottom:18px;padding:14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:14px;font-weight:800;color:var(--txt-strong)">${escapeHtml(group.productName)}</div>
+            ${group.productId ? `<div class="mono" style="font-size:10.5px;color:var(--muted)">${escapeHtml(group.productId)}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">${bulkButtons}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">${prodPills}${prodPend}</div>
+        ${varRows.join('')}
+      </div>`);
+  }
+  // Painel de totais globais no topo
+  const summaryPills = DISTRIBUIDOR_DESTINOS.map(d => `<div style="background:${d.color};color:${d.textColor||'#fff'};padding:10px 16px;border-radius:10px;min-width:120px;text-align:center"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.9">${d.label}</div><div style="font-size:22px;font-weight:800;margin-top:2px">${totGlobal[d.id]}</div></div>`).join('');
+  const pendPill = `<div style="background:var(--line);color:var(--muted);padding:10px 16px;border-radius:10px;min-width:120px;text-align:center"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Pendente</div><div style="font-size:22px;font-weight:800;margin-top:2px">${totGlobal.nenhum}</div></div>`;
+  container.innerHTML = `
+    <div style="position:sticky;top:0;background:var(--panel);padding:10px 2px 14px;border-bottom:1px solid var(--line);margin-bottom:14px;z-index:5">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:8px">Totais da distribuição</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">${summaryPills}${pendPill}</div>
+    </div>
+    ${prodBlocks.length ? prodBlocks.join('') : '<div style="padding:40px;text-align:center;color:var(--muted)">Nenhum item nas notas para distribuir.</div>'}
+  `;
 }
 function toggleHubReceived(shipmentId, hoId){
   const s = getShipment(shipmentId); if(!s) return;
@@ -5939,7 +6101,7 @@ function renderDetail(id){
           ${(() => {
             const mode = s.hubPedidosMode || 'geral';
             const chip = (val, label, title) => `<button onclick="setHubPedidosMode('${s.id}','${val}')" title="${title}" style="background:${mode===val?'var(--accent)':'transparent'};color:${mode===val?'#000':'var(--muted)'};border:1px solid ${mode===val?'var(--accent)':'var(--line)'};border-radius:7px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer">${label}</button>`;
-            return `<div style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-right:4px">Pedidos Hub:</span>${chip('geral','Geral','Um ou poucos pedidos valem para todas as notas')}${chip('individual','Por nota','Cada nota tem seus próprios pedidos vinculados')}</div>`;
+            return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button onclick="openDistribuidorNotas('${s.id}')" title="Distribuir os itens das notas entre Shopee, Mercado Livre, Amazon e CD" style="background:linear-gradient(135deg,var(--accent2),#d4a40c);color:#000;border:0;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px">${ic('box',{size:13,color:'currentColor'})} Distribuidor de Notas</button><span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin:0 4px 0 8px">Pedidos Hub:</span>${chip('geral','Geral','Um ou poucos pedidos valem para todas as notas')}${chip('individual','Por nota','Cada nota tem seus próprios pedidos vinculados')}</div>`;
           })()}
         </div>
         <div class="nf-grid">
